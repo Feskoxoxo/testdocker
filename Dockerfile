@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ghcr.io/realm/swiftlint:latest
 
 RUN apt-get update && \
     apt-get install build-essential curl file git ruby-full locales --no-install-recommends -y && \
@@ -19,10 +19,9 @@ RUN chmod -R 777 "/home/linuxbrew/.linuxbrew/bin"
 RUN which brew
 
 USER linuxbrew
-RUN brew install swiftlint
-RUN brew install sonar-scanner
+
+RUN brew install python3
 RUN pip3 install mobsfscan --break-system-packages
-RUN brew uninstall sonar-scanner
 
 USER root
 ARG SONAR_SCANNER_HOME=/opt/sonar-scanner
@@ -39,8 +38,9 @@ ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 \
     LC_ALL=en_US.UTF-8
 RUN apt update
 RUN apt install wget
+RUN apt install unzip
 WORKDIR /opt
-RUN wget -U "scannercli" -q -O /opt/sonar-scanner-cli.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}.zip;
+RUN wget -U "linuxbrew" -q -O /opt/sonar-scanner-cli.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}.zip;
 RUN unzip sonar-scanner-cli.zip;
 RUN mv sonar-scanner-${SONAR_SCANNER_VERSION} ${SONAR_SCANNER_HOME}; 
 RUN apt install openjdk-17-jre -y
@@ -50,11 +50,13 @@ chmod -R 555 "${SONAR_SCANNER_HOME}"; \
 chmod -R 754 "${SRC_PATH}" "${SONAR_USER_HOME}" "${SCANNER_WORKDIR_PATH}";
 
 
-COPY --chown=scanner-cli:scanner-cli bin /usr/bin/
-
 VOLUME [ "/tmp/cacerts" ]
 
+
 WORKDIR ${SRC_PATH}
+
+
+CMD ["sonar-scanner"]
 
 
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
